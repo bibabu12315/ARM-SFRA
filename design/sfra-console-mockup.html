@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SFRA Studio · 串口日志模块设计稿</title>
+<style>
+:root{
+--bg:#f5f5f7;--card:#fff;--group:#f2f2f5;--inset:#fafafb;
+--t1:#1d1d1f;--t2:#6e6e73;--t3:#a1a1a6;--line:#e6e6eb;--line2:#f1f1f4;
+--blue:#0071e3;--bb:#e9f2fd;--green:#34c759;--amber:#ff9500;--purple:#7d5fe8;
+--red:#ff3b30;
+--mono:"SF Mono","Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;padding:26px 26px 60px}
+
+h1.page{font-size:17px;font-weight:600;max-width:1260px;margin:0 auto 4px}
+p.sub{font-size:12.5px;color:var(--t2);max-width:1260px;margin:0 auto 22px}
+
+.win{max-width:1260px;margin:0 auto 30px;background:var(--card);border-radius:22px;overflow:hidden;
+  border:.5px solid rgba(0,0,0,.07);box-shadow:0 1px 3px rgba(0,0,0,.04),0 22px 56px -30px rgba(0,0,0,.3)}
+
+.cap{font-size:11px;color:var(--t3);padding:9px 16px;background:#fbfbfd;border-bottom:.5px solid var(--line2);
+  font-family:var(--mono);letter-spacing:.02em}
+
+/* ---------- 主布局：三列，右列含日志 ---------- */
+.body{display:grid;grid-template-columns:290px minmax(0,1fr) 300px;min-height:660px}
+.col{padding:16px 14px 18px;overflow:hidden}
+.col.l{border-right:.5px solid var(--line2);background:#fcfcfd}
+.col.r{border-left:.5px solid var(--line2);background:#fcfcfd;display:flex;flex-direction:column}
+.col.m{padding:14px 16px 18px}
+
+.h{font-size:10.5px;font-weight:500;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin:18px 0 7px 2px}
+.h:first-child{margin-top:0}
+.grp{background:#fff;border:.5px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;
+  min-height:36px;border-bottom:.5px solid var(--line2)}
+.row:last-child{border-bottom:0}
+.row .k{font-size:12.5px}
+.row .v{font-size:12px;color:var(--t2);font-family:var(--mono)}
+.mc{background:#fff;border:.5px solid var(--line);border-radius:12px;padding:2px 11px}
+.mt{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:.5px solid var(--line2);min-height:30px}
+.mt:last-child{border-bottom:0}
+.mt .k{font-size:12px;color:var(--t2)}
+.mt .v{font-size:13px;font-weight:500;font-family:var(--mono)}
+.v.ok{color:var(--green)}.v.sm{font-size:11.5px;font-weight:400;color:var(--t2)}
+.chip{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:980px;font-size:10.5px;font-weight:500}
+.chip.g{background:rgba(52,199,89,.13);color:#248a3d}
+.chip.mu{background:var(--group);color:var(--t3)}
+.note{display:flex;gap:7px;align-items:flex-start;padding:7px 10px;border-radius:9px;background:var(--group);
+  font-size:11.5px;color:var(--t2);margin-bottom:5px}
+.note i{width:5px;height:5px;border-radius:50%;background:var(--t3);flex:0 0 auto;margin-top:6px}
+
+/* ---------- 绘图占位 ---------- */
+.plotbox{background:#fff;border:.5px solid var(--line);border-radius:12px;margin-bottom:11px;overflow:hidden}
+.plothead{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:.5px solid var(--line2)}
+.plothead .t{font-size:12px;font-weight:500}
+.plothead .t small{font-size:10px;color:var(--t3);margin-left:5px;font-weight:400}
+.plothead .lg{display:flex;gap:11px;font-size:10.5px;color:var(--t2)}
+.plothead .lg span{display:flex;align-items:center;gap:4px}
+.plothead .lg i{width:9px;height:2px;border-radius:1px;display:block}
+.plotbody{height:196px;position:relative;background:
+  linear-gradient(#fff,#fff)}
+.plotbody svg{display:block;width:100%;height:100%}
+
+/* ============ 串口日志面板（本稿核心） ============ */
+.console{margin-top:auto;border:.5px solid var(--line);border-radius:12px;background:#fff;
+  overflow:hidden;display:flex;flex-direction:column}
+
+/* 头部：标题 + 状态点 + 操作 */
+.cc-head{display:flex;align-items:center;gap:7px;padding:8px 11px;cursor:pointer;
+  border-bottom:.5px solid var(--line2);user-select:none}
+.cc-head:hover{background:#fcfcfd}
+.cc-head .caret{width:9px;height:9px;flex:0 0 auto;transition:transform .15s;
+  border-right:1.5px solid var(--t3);border-bottom:1.5px solid var(--t3);
+  transform:rotate(45deg);margin-top:-3px}
+.console.folded .cc-head .caret{transform:rotate(-45deg);margin-top:0}
+.console.folded .cc-body{display:none}
+.cc-head .ti{font-size:12px;font-weight:500}
+.cc-head .st{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);
+  font-family:var(--mono);margin-left:2px}
+.cc-head .st i{width:5px;height:5px;border-radius:50%;background:var(--t3)}
+.cc-head .st i.on{background:var(--green);box-shadow:0 0 0 2px rgba(52,199,89,.16)}
+.cc-head .sp{flex:1}
+.cc-head .cnt{font-size:10px;color:var(--t3);font-family:var(--mono)}
+.iconbtn{width:22px;height:22px;border:0;border-radius:6px;background:none;cursor:pointer;
+  color:var(--t3);display:flex;align-items:center;justify-content:center;font-size:12px}
+.iconbtn:hover{background:var(--group);color:var(--t2)}
+
+/* 过滤 chip 行 */
+.cc-filt{display:flex;gap:4px;padding:6px 9px;border-bottom:.5px solid var(--line2);
+  background:#fcfcfd;flex-wrap:wrap}
+.fchip{height:19px;padding:0 7px;border-radius:980px;border:.5px solid var(--line);
+  background:#fff;font-size:10px;font-family:var(--mono);color:var(--t3);
+  cursor:pointer;display:flex;align-items:center;gap:3px;user-select:none}
+.fchip.on{background:var(--bb);border-color:transparent;color:var(--blue);font-weight:500}
+.fchip b{font-weight:600;font-size:9.5px;opacity:.75}
+
+/* 日志正文 */
+.cc-body{display:flex;flex-direction:column}
+.cc-log{height:206px;overflow-y:auto;padding:7px 0;font-family:var(--mono);
+  font-size:10.5px;line-height:1.62;background:#fff;scrollbar-width:thin}
+.cc-log::-webkit-scrollbar{width:7px}
+.cc-log::-webkit-scrollbar-thumb{background:#d8d8de;border-radius:4px}
+.ln{display:flex;gap:7px;padding:0 11px;white-space:pre-wrap;word-break:break-all}
+.ln:hover{background:#f7f9fc}
+.ln .ts{color:#c2c2c8;flex:0 0 auto;font-size:10px}
+.ln .tag{flex:0 0 auto;width:22px;font-size:9px;font-weight:600;letter-spacing:.02em;padding-top:1px}
+.ln .msg{flex:1;color:var(--t1)}
+.ln.tx .tag{color:var(--blue)}   .ln.tx .msg{color:#0059b3}
+.ln.rx .tag{color:var(--green)}  .ln.rx .msg{color:#248a3d}
+.ln.info .tag{color:var(--t3)}   .ln.info .msg{color:var(--t2)}
+.ln.err .tag{color:var(--red)}   .ln.err .msg{color:#c0271d}
+.ln.err{background:rgba(255,59,48,.045)}
+.ln.sys{background:var(--inset)}
+.ln.sys .msg{color:var(--t3)}
+
+/* 输入行 */
+.cc-in{display:flex;align-items:center;gap:6px;padding:7px 9px;border-top:.5px solid var(--line2);
+  background:#fcfcfd}
+.cc-in .prompt{font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:600}
+.cc-in input{flex:1;border:0;background:none;outline:none;font-family:var(--mono);
+  font-size:11px;color:var(--t1);padding:3px 0}
+.cc-in input::placeholder{color:var(--t3)}
+.sendbtn{height:24px;padding:0 11px;border:0;border-radius:7px;background:var(--blue);
+  color:#fff;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit}
+.sendbtn:hover{filter:brightness(1.06)}
+.sendbtn:disabled{opacity:.35;cursor:not-allowed}
+.quickrow{display:flex;gap:4px;padding:0 9px 7px;background:#fcfcfd;flex-wrap:wrap}
+.qbtn{height:20px;padding:0 8px;border:.5px solid var(--line);border-radius:6px;background:#fff;
+  font-family:var(--mono);font-size:10px;color:var(--t2);cursor:pointer}
+.qbtn:hover{background:var(--bb);border-color:transparent;color:var(--blue)}
+
+/* 说明栏 */
+.legend{max-width:1260px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.lcard{background:#fff;border:.5px solid var(--line);border-radius:14px;padding:14px 16px}
+.lcard h3{font-size:12.5px;font-weight:600;margin-bottom:8px}
+.lcard ul{list-style:none;font-size:12px;color:var(--t2);line-height:1.75}
+.lcard li{padding-left:14px;position:relative}
+.lcard li:before{content:"·";position:absolute;left:3px;color:var(--t3)}
+.lcard code{font-family:var(--mono);font-size:11px;background:var(--group);
+  padding:1px 5px;border-radius:4px;color:var(--t1)}
+.anno{display:inline-block;background:var(--amber);color:#fff;font-size:9px;font-weight:600;
+  padding:1px 5px;border-radius:4px;vertical-align:middle;margin-left:4px;letter-spacing:.02em}
+</style>
+</head>
+<body>
+
+<h1 class="page">SFRA Studio · 串口日志模块 · 设计稿</h1>
+<p class="sub">放在 Tab1「测量」右列底部，可折叠。下面是<b>展开态</b>、<b>折叠态</b>、<b>出错态</b>三种状态。
+面板不会挤压现有三列，展开时右列内容自然上移滚动。</p>
+
+<!-- ============================ 1. 展开态 ============================ -->
+<div class="win">
+  <div class="cap">状态 A · 展开（默认）— 有数据、有收发</div>
+  <div class="body">
+
+    <!-- 左列：扫频配置（简略示意） -->
+    <div class="col l">
+      <div class="h">扫频配置</div>
+      <div class="grp">
+        <div class="row"><span class="k">模式</span><span class="v">Plant</span></div>
+        <div class="row"><span class="k">起点</span><span class="v">100 Hz</span></div>
+        <div class="row"><span class="k">终点</span><span class="v">20000 Hz</span></div>
+        <div class="row"><span class="k">点数 / decade</span><span class="v">20</span></div>
+        <div class="row"><span class="k">精度</span><span class="v">N</span></div>
+        <div class="row"><span class="k">注入幅值</span><span class="v">1.0 %pu</span></div>
+      </div>
+      <div class="h">工作点</div>
+      <div class="grp">
+        <div class="row"><span class="k">拓扑</span><span class="v">SK2</span></div>
+        <div class="row"><span class="k">Fc / Q</span><span class="v">1 kHz / 0.33</span></div>
+        <div class="row"><span class="k">被测环路</span><span class="v">开环 Plant</span></div>
+      </div>
+    </div>
+
+    <!-- 中列：两张图 -->
+    <div class="col m">
+      <div class="plotbox">
+        <div class="plothead">
+          <span class="t">增益<small>dB</small></span>
+          <div class="lg"><span style="color:var(--blue)"><i style="background:currentColor"></i>实测</span></div>
+        </div>
+        <div class="plotbody">
+          <svg viewBox="0 0 600 196" preserveAspectRatio="none">
+            <g stroke="#ededf1" stroke-width="1">
+              <line x1="46" y1="30" x2="590" y2="30"/><line x1="46" y1="70" x2="590" y2="70"/>
+              <line x1="46" y1="110" x2="590" y2="110"/><line x1="46" y1="150" x2="590" y2="150"/>
+              <line x1="120" y1="8" x2="120" y2="180"/><line x1="260" y1="8" x2="260" y2="180"/>
+              <line x1="400" y1="8" x2="400" y2="180"/><line x1="540" y1="8" x2="540" y2="180"/>
+            </g>
+            <line x1="46" y1="110" x2="590" y2="110" stroke="#c8c8cf" stroke-dasharray="4 4"/>
+            <path d="M60,52 L100,54 L140,58 L180,66 L220,78 L260,92 L300,104 L340,116
+                     L380,128 L420,140 L460,150 L500,158 L560,164"
+                  fill="rgba(0,113,227,.06)" stroke="none"/>
+            <polyline points="60,52 100,54 140,58 180,66 220,78 260,92 300,104 340,116 380,128 420,140 460,150 500,158 560,164"
+              fill="none" stroke="#0071e3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="plotbox">
+        <div class="plothead">
+          <span class="t">相位<small>deg</small></span>
+          <div class="lg"><span style="color:#c8c8cf"><i style="background:currentColor"></i>−180° 参考</span></div>
+        </div>
+        <div class="plotbody" style="height:150px">
+          <svg viewBox="0 0 600 150" preserveAspectRatio="none">
+            <g stroke="#ededf1" stroke-width="1">
+              <line x1="46" y1="30" x2="590" y2="30"/><line x1="46" y1="75" x2="590" y2="75"/>
+              <line x1="46" y1="120" x2="590" y2="120"/>
+              <line x1="120" y1="8" x2="120" y2="140"/><line x1="260" y1="8" x2="260" y2="140"/>
+              <line x1="400" y1="8" x2="400" y2="140"/><line x1="540" y1="8" x2="540" y2="140"/>
+            </g>
+            <line x1="46" y1="90" x2="590" y2="90" stroke="#e8b96f" stroke-dasharray="5 4"/>
+            <polyline points="60,40 100,42 140,48 180,58 220,70 260,80 300,88 340,95 380,100 420,104 460,107 500,109 560,111"
+              fill="none" stroke="#0071e3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右列：稳定性 + 告警 + 串口日志 -->
+    <div class="col r">
+      <div class="h">稳定性判据</div>
+      <div class="mc">
+        <div class="mt"><span class="k">相位裕度 PM</span><span class="v ok">—</span></div>
+        <div class="mt"><span class="k">增益裕度 GM</span><span class="v ok">11.3<small style="font-size:10px"> dB</small></span></div>
+        <div class="mt"><span class="k">穿越频率 fc</span><span class="v">—</span></div>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:7px">
+        <span class="chip mu">等待数据</span><span class="chip mu">等待数据</span>
+      </div>
+
+      <!-- ===== 串口日志面板 ===== -->
+      <div class="console" style="margin-top:16px">
+        <div class="cc-head">
+          <span class="caret"></span>
+          <span class="ti">串口日志</span>
+          <span class="st"><i class="on"></i>COM14 · 921600</span>
+          <span class="sp"></span>
+          <span class="cnt">128 行</span>
+          <button class="iconbtn" title="暂停自动滚动">⏸</button>
+          <button class="iconbtn" title="清空日志">🗑</button>
+        </div>
+
+        <div class="cc-filt">
+          <span class="fchip on">全部 <b>128</b></span>
+          <span class="fchip">TX <b>24</b></span>
+          <span class="fchip">RX <b>81</b></span>
+          <span class="fchip">ERR <b>2</b></span>
+        </div>
+
+        <div class="cc-body">
+          <div class="cc-log">
+            <div class="ln sys"><span class="ts">13:41:02.114</span><span class="tag">SYS</span><span class="msg">打开 COM14 @ 921600 8N1</span></div>
+            <div class="ln tx"><span class="ts">13:41:02.208</span><span class="tag">TX</span><span class="msg">→ HANDSHAKE</span></div>
+            <div class="ln rx"><span class="ts">13:41:02.241</span><span class="tag">RX</span><span class="msg">← CAPS v1.0 fs=100000 maxlen=64</span></div>
+            <div class="ln info"><span class="ts">13:41:02.242</span><span class="tag">INF</span><span class="msg">握手完成 · 固件 v1.0 · Fs 100 kHz</span></div>
+            <div class="ln tx"><span class="ts">13:41:05.010</span><span class="tag">TX</span><span class="msg">→ SWEEP start 100→20000Hz 20ppd</span></div>
+            <div class="ln rx"><span class="ts">13:41:05.077</span><span class="tag">RX</span><span class="msg">← ACK 0x01</span></div>
+            <div class="ln rx"><span class="ts">13:41:06.302</span><span class="tag">RX</span><span class="msg">← POINT f=100.0 H=3.320∠-91.2°</span></div>
+            <div class="ln rx"><span class="ts">13:41:06.980</span><span class="tag">RX</span><span class="msg">← POINT f=112.2 H=2.957∠-91.5°</span></div>
+            <div class="ln err"><span class="ts">13:41:07.440</span><span class="tag">ERR</span><span class="msg">← NAK 0x02 重发 1/3（CRC 校验失败）</span></div>
+            <div class="ln rx"><span class="ts">13:41:07.512</span><span class="tag">RX</span><span class="msg">← POINT f=125.9 H=2.631∠-91.8°</span></div>
+            <div class="ln info"><span class="ts">13:41:08.001</span><span class="tag">INF</span><span class="msg">已重发，恢复正常</span></div>
+            <div class="ln tx"><span class="ts">13:41:18.220</span><span class="tag">TX</span><span class="msg">→ sfra cost</span></div>
+            <div class="ln rx"><span class="ts">13:41:18.264</span><span class="tag">RX</span><span class="msg">← sfra cost: avg=1312 max=1475 n=58</span></div>
+            <div class="ln rx"><span class="ts">13:41:18.266</span><span class="tag">RX</span><span class="msg">  drop=0 budget=7200 cyc (avg=18% max=20%)</span></div>
+          </div>
+
+          <div class="quickrow">
+            <button class="qbtn">help</button>
+            <button class="qbtn">sfra</button>
+            <button class="qbtn">sfra cost</button>
+            <button class="qbtn">sfra dump</button>
+            <button class="qbtn">ver</button>
+          </div>
+
+          <div class="cc-in">
+            <span class="prompt">›</span>
+            <input placeholder="输入命令，回车发送…（↑↓ 翻历史）">
+            <button class="sendbtn">发送</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================ 2. 折叠态 ============================ -->
+<div class="win">
+  <div class="cap">状态 B · 折叠 — 只占一行，不干扰看图</div>
+  <div class="body" style="min-height:auto">
+    <div class="col l" style="min-height:300px">
+      <div class="h">扫频配置</div>
+      <div class="grp">
+        <div class="row"><span class="k">模式</span><span class="v">Plant</span></div>
+        <div class="row"><span class="k">起点</span><span class="v">100 Hz</span></div>
+      </div>
+    </div>
+    <div class="col m">
+      <div class="plotbox" style="margin-bottom:0">
+        <div class="plothead"><span class="t">增益<small>dB</small></span>
+          <div class="lg"><span style="color:var(--blue)"><i style="background:currentColor"></i>实测</span></div></div>
+        <div class="plotbody" style="height:260px">
+          <svg viewBox="0 0 600 260" preserveAspectRatio="none">
+            <g stroke="#ededf1" stroke-width="1">
+              <line x1="46" y1="50" x2="590" y2="50"/><line x1="46" y1="110" x2="590" y2="110"/>
+              <line x1="46" y1="170" x2="590" y2="170"/><line x1="46" y1="230" x2="590" y2="230"/>
+              <line x1="120" y1="8" x2="120" y2="245"/><line x1="260" y1="8" x2="260" y2="245"/>
+              <line x1="400" y1="8" x2="400" y2="245"/><line x1="540" y1="8" x2="540" y2="245"/>
+            </g>
+            <line x1="46" y1="140" x2="590" y2="140" stroke="#c8c8cf" stroke-dasharray="4 4"/>
+            <polyline points="60,66 100,68 140,74 180,84 220,98 260,118 300,136 340,154 380,172 420,190 460,204 500,214 560,222"
+              fill="none" stroke="#0071e3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="col r" style="justify-content:flex-end">
+      <div class="h">稳定性判据</div>
+      <div class="mc">
+        <div class="mt"><span class="k">相位裕度 PM</span><span class="v ok">—</span></div>
+        <div class="mt"><span class="k">增益裕度 GM</span><span class="v ok">11.3<small style="font-size:10px"> dB</small></span></div>
+      </div>
+      <div class="console folded" style="margin-top:16px">
+        <div class="cc-head">
+          <span class="caret"></span>
+          <span class="ti">串口日志</span>
+          <span class="st"><i class="on"></i>COM14</span>
+          <span class="sp"></span>
+          <span class="cnt">128 行 · 2 错误</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ 3. 说明 ============================ -->
+<div class="legend">
+  <div class="lcard">
+    <h3>为什么要它</h3>
+    <ul>
+      <li>现在所有日志只进状态栏 <code>showMessage</code>，8 秒后被下一条顶掉，看不到历史</li>
+      <li>固件已经有一套完整 shell（<code>sfra</code>/<code>sfra cost</code>/<code>help</code>），但上位机从没给它开口</li>
+      <li>出问题时要靠 SecureCRT 抢串口，而串口是独占的——一抢上位机就断</li>
+    </ul>
+  </div>
+  <div class="lcard">
+    <h3>设计要点</h3>
+    <ul>
+      <li><b>可折叠</b>：默认展开，点标题栏折叠成一行，不挤压图表</li>
+      <li><b>分色</b>：TX 蓝 / RX 绿 / ERR 红 / SYS 灰，一眼分辨方向</li>
+      <li><b>只读有上限</b>：环形缓冲 500 行，超出自动丢弃最旧的，长跑不撑爆内存</li>
+      <li><b>不抢协议字节</b>：二进制帧不进日志区，只有 ASCII shell 文本才显示</li>
+    </ul>
+  </div>
+  <div class="lcard">
+    <h3>关键取舍</h3>
+    <ul>
+      <li>日志面板<b>不新建串口</b>，复用现有 <code>SerialLink</code> 的同一个句柄追加监听</li>
+      <li>发送走同一条链路，不会和扫频命令抢答</li>
+      <li>扫频进行中禁用发送框，避免畸形帧打断状态机</li>
+      <li>发送的行会回显在日志里（蓝色 → 箭头），形成"我发了什么 / 它回了什么"的对照</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

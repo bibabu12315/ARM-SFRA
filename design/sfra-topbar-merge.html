@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SFRA Studio · 顶栏合并方案设计稿</title>
+<style>
+:root{
+--bg:#f5f5f7;--card:#fff;--group:#f2f2f5;--inset:#fafafb;
+--t1:#1d1d1f;--t2:#6e6e73;--t3:#a1a1a6;--line:#e6e6eb;--line2:#f1f1f4;
+--blue:#0071e3;--bb:#e9f2fd;--green:#34c759;--amber:#ff9500;--purple:#7d5fe8;
+--red:#ff3b30;--toolbar:#fbfbfd;--panel:#fcfcfd;
+--mono:"SF Mono","Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;padding:26px 26px 70px}
+
+h1.page{font-size:17px;font-weight:600;max-width:1180px;margin:0 auto 4px}
+p.sub{font-size:12.5px;color:var(--t2);max-width:1180px;margin:0 auto 24px}
+
+/* ============ 方案容器 ============ */
+.sec{max-width:1180px;margin:0 auto 38px}
+.sec > h2{font-size:14px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.sec > h2 .tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;
+  background:var(--bb);color:var(--blue);font-family:var(--mono);letter-spacing:.03em}
+.sec > h2 .tag.rec{background:rgba(52,199,89,.15);color:#248a3d}
+.sec > p.desc{font-size:12.5px;color:var(--t2);margin-bottom:14px;max-width:980px}
+
+/* ============ 窗口外壳 ============ */
+.win{background:var(--card);border-radius:20px;overflow:hidden;
+  border:.5px solid rgba(0,0,0,.08);box-shadow:0 1px 3px rgba(0,0,0,.04),0 20px 50px -28px rgba(0,0,0,.32)}
+.cap{font-size:11px;color:var(--t3);padding:8px 15px;background:var(--toolbar);
+  border-bottom:.5px solid var(--line2);font-family:var(--mono);letter-spacing:.02em;
+  display:flex;justify-content:space-between}
+.cap .dim{color:#c4c4c9}
+
+/* ---------- 顶栏 —— 这是本次改动的核心 ---------- */
+.topbar{display:flex;align-items:center;gap:10px;padding:0 15px;height:52px;
+  background:var(--toolbar);border-bottom:.5px solid var(--line2)}
+.led{width:7px;height:7px;border-radius:50%;background:var(--green);flex:0 0 auto}
+.appname{font-size:13px;font-weight:600;white-space:nowrap}
+.spacer{flex:1}
+
+/* 串口这一组 */
+.serial{display:flex;align-items:center;gap:7px}
+.combo{display:flex;align-items:center;justify-content:space-between;gap:6px;
+  height:24px;padding:0 8px;border:.5px solid var(--line);border-radius:6px;
+  background:var(--card);font-size:11.5px;color:var(--t1);min-width:118px}
+.combo .car{color:var(--t3);font-size:8px}
+.btn{height:24px;padding:0 10px;border-radius:6px;border:.5px solid var(--line);
+  background:var(--card);font-size:11px;color:var(--t1);display:flex;align-items:center;white-space:nowrap}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* pill */
+.pill{height:22px;padding:0 9px;border-radius:980px;background:var(--group);
+  color:var(--t2);font-size:10.5px;display:inline-flex;align-items:center;
+  white-space:nowrap;font-family:var(--mono)}
+.pill.ok{background:rgba(52,199,89,.13);color:#248a3d}
+
+/* ---------- 分段控件（Tab 切换） ---------- */
+.seg{display:inline-flex;align-items:center;background:var(--group);border-radius:8px;padding:2px}
+.seg .it{padding:3px 16px;border-radius:6px;font-size:12px;color:var(--t2);
+  white-space:nowrap;border:1px solid transparent;cursor:default}
+.seg .it.on{background:var(--card);color:var(--t1);font-weight:600;border-color:rgba(0,0,0,.045)}
+/* 白色胶囊版本：在 toolbar 底上给 Tab 自己一块白底 */
+.seg.card{background:var(--card);border:.5px solid var(--line);padding:2px}
+.seg.card .it.on{background:var(--blue);color:#fff;border-color:transparent}
+.seg.card .it{color:var(--t2)}
+
+/* 竖直分隔线 */
+.vsep{width:1px;height:20px;background:var(--line);flex:0 0 auto}
+
+/* 右侧整组底色 */
+.boxgroup{display:flex;align-items:center;gap:9px;background:var(--group);
+  border-radius:9px;padding:4px 10px}
+
+/* ---------- 内容占位 ---------- */
+.body{display:grid;grid-template-columns:290px minmax(0,1fr) 300px;height:330px}
+.col{padding:13px 13px 14px;overflow:hidden}
+.col.l{border-right:.5px solid var(--line2);background:var(--panel)}
+.col.r{border-left:.5px solid var(--line2);background:var(--panel)}
+.col.m{padding:12px 14px}
+.h{font-size:10px;font-weight:500;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin:0 0 6px 2px}
+.grp{background:#fff;border:.5px solid var(--line);border-radius:10px;padding:1px 10px;margin-bottom:11px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:6px 0;min-height:30px;border-bottom:.5px solid var(--line2);font-size:12px}
+.row:last-child{border-bottom:0}
+.row .v{font-family:var(--mono);font-size:11.5px;color:var(--t2)}
+.miniseg{display:inline-flex;background:var(--group);border-radius:7px;padding:2px}
+.miniseg span{padding:2px 9px;border-radius:5px;font-size:11px;color:var(--t2)}
+.miniseg span.on{background:#fff;color:var(--t1);font-weight:600}
+.plotbox{background:#fff;border:.5px solid var(--line);border-radius:10px;height:100%;position:relative;overflow:hidden}
+.plotgrid{position:absolute;inset:14px;background-image:
+  linear-gradient(to right,var(--line2) .5px,transparent .5px),
+  linear-gradient(to bottom,var(--line2) .5px,transparent .5px);
+  background-size:38px 32px;border-left:.5px solid var(--line);border-bottom:.5px solid var(--line)}
+.placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:var(--t3);font-size:11px;font-family:var(--mono);letter-spacing:.04em}
+
+/* ---------- 尺寸标注 ---------- */
+.ruler{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;
+  color:var(--t3);margin-top:5px}
+.ruler .bar{flex:1;height:1px;background:repeating-linear-gradient(to right,
+  #c4c4c9 0 3px,transparent 3px 6px)}
+
+/* ---------- 对比表 ---------- */
+table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;
+  border-radius:10px;overflow:hidden;border:.5px solid var(--line)}
+th,td{padding:8px 11px;text-align:left;border-bottom:.5px solid var(--line2);vertical-align:top}
+th{background:var(--inset);font-weight:600;font-size:11px;color:var(--t2);
+  letter-spacing:.02em;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.y{color:#248a3d;font-weight:500}
+td.n{color:#c0392b;font-weight:500}
+td.m{color:#b36b00;font-weight:500}
+.mono{font-family:var(--mono);font-size:11px}
+.hl{background:var(--bb);color:var(--blue);padding:1px 5px;border-radius:4px;
+  font-family:var(--mono);font-size:10.5px}
+.tip{font-size:11.5px;color:var(--t3);margin-top:7px}
+</style>
+</head>
+<body>
+
+<h1 class="page">SFRA Studio · 顶栏合并方案</h1>
+<p class="sub">
+现在顶栏两行共 92px：第一行放指示灯/标题/串口/连接/两个 pill，第二行只放一个居中的「测量 / 补偿器」 Tab。
+第二行除中间 220px 外全是空白。下面三个方案分别释放 <b>46px</b>、<b>0px</b>、<b>46px</b>，并给出各自的取舍。
+</p>
+
+
+<!-- ================================================ 方案 A -->
+<div class="sec">
+  <h2>方案 A · 完全合并成一行 <span class="tag">省 46px</span><span class="tag rec">推荐</span></h2>
+  <p class="desc">
+    把「测量 / 补偿器」直接塞进顶栏，放在标题右侧；串口那一组靠右。Tab 仍然<b>视觉居中</b>——用两侧等重的弹簧，
+    左侧弹簧吃掉"标题 + Tab 左半"的宽度差，所以哪怕窗口缩放，Tab 的中心也始终落在窗口中线附近（±6px）。
+  </p>
+
+  <div class="win">
+    <div class="cap"><span>方案 A · 单行顶栏 · 总高 52px</span><span class="dim">1360 × 860</span></div>
+    <div class="topbar">
+      <span class="led"></span>
+      <span class="appname">SFRA Studio</span>
+      <span class="spacer"></span>
+      <span class="seg">
+        <span class="it on">测量</span>
+        <span class="it">补偿器</span>
+      </span>
+      <span class="spacer"></span>
+      <span class="serial">
+        <span class="combo"><span>假 MCU（本机）</span><span class="car">▼</span></span>
+        <span class="btn pri">连接</span>
+        <span class="pill">未连接</span>
+        <span class="pill">仿真 · Fs 100 kHz</span>
+      </span>
+    </div>
+    <div class="body">
+      <div class="col l">
+        <div class="h">扫频配置</div>
+        <div class="grp">
+          <div class="row"><span>模式</span><span class="miniseg"><span>Loop</span><span class="on">Plant</span></span></div>
+          <div class="row"><span>精度</span><span class="miniseg"><span>快</span><span class="on">标准</span><span>精细</span></span></div>
+          <div class="row"><span>起点</span><span class="v">100 Hz</span></div>
+          <div class="row"><span>终点</span><span class="v">2.00 kHz</span></div>
+        </div>
+        <div class="h">动作</div>
+        <div class="grp">
+          <div class="row"><span>扫描</span><span class="v">47 点 · 已就绪</span></div>
+        </div>
+      </div>
+      <div class="col m">
+        <div class="plotbox">
+          <div class="plotgrid"></div>
+          <div class="placeholder">幅频 / 相频 Bode 图</div>
+        </div>
+      </div>
+      <div class="col r">
+        <div class="h">稳定性判据</div>
+        <div class="grp">
+          <div class="row"><span>相位裕度</span><span class="v">52.4°</span></div>
+          <div class="row"><span>增益裕度</span><span class="v">11.8 dB</span></div>
+          <div class="row"><span>穿越频率</span><span class="v">1.24 kHz</span></div>
+        </div>
+        <div class="h">串口日志</div>
+        <div class="grp">
+          <div class="row"><span>RX</span><span class="v">ACK 0x06 OK</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tip">
+    ⚠ 取舍：可用宽度最紧。1360px 下顶栏放得下；但压到 1120px（窗口最小宽）时，
+    「仿真 · Fs 100 kHz」这个 pill 会被挤掉，需要它自动隐藏或缩成「Fs 100k」。
+    <b>这一点必须在实现时处理，不能让它把 Tab 顶离中线。</b>
+  </div>
+</div>
+
+
+<!-- ================================================ 方案 B -->
+<div class="sec">
+  <h2>方案 B · 保留两行，但给两组各自一块底色 <span class="tag">省 0px</span></h2>
+  <p class="desc">
+    版式不动，靠<b>视觉分组</b>解决"两行太空"的观感。第一行右侧整组（串口 + 连接 + pill）套一个浅灰底胶囊；
+    第二行的 Tab 也套一个浅灰底。两组各自成块，中间的空白就从"浪费"变成"留白"。
+  </p>
+
+  <div class="win">
+    <div class="cap"><span>方案 B · 双行 · 总高 92px</span><span class="dim">1360 × 860</span></div>
+    <div class="topbar" style="border-bottom:1px solid var(--line2)">
+      <span class="led"></span>
+      <span class="appname">SFRA Studio</span>
+      <span class="spacer"></span>
+      <span class="boxgroup">
+        <span class="combo"><span>假 MCU（本机）</span><span class="car">▼</span></span>
+        <span class="btn pri">连接</span>
+        <span class="pill">未连接</span>
+        <span class="pill">仿真 · Fs 100 kHz</span>
+      </span>
+    </div>
+    <div style="height:46px;display:flex;align-items:center;justify-content:center;
+                background:var(--toolbar);border-bottom:.5px solid var(--line2)">
+      <span class="seg card">
+        <span class="it on">测量</span>
+        <span class="it">补偿器</span>
+      </span>
+    </div>
+    <div class="body" style="height:284px">
+      <div class="col l">
+        <div class="h">扫频配置</div>
+        <div class="grp">
+          <div class="row"><span>模式</span><span class="miniseg"><span>Loop</span><span class="on">Plant</span></span></div>
+          <div class="row"><span>精度</span><span class="miniseg"><span>快</span><span class="on">标准</span><span>精细</span></span></div>
+        </div>
+      </div>
+      <div class="col m">
+        <div class="plotbox"><div class="plotgrid"></div>
+          <div class="placeholder">幅频 / 相频 Bode 图</div></div>
+      </div>
+      <div class="col r">
+        <div class="h">稳定性判据</div>
+        <div class="grp">
+          <div class="row"><span>相位裕度</span><span class="v">52.4°</span></div>
+          <div class="row"><span>增益裕度</span><span class="v">11.8 dB</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tip">
+    ✓ 优点：零风险，不碰布局逻辑。<br>
+    ⚠ 缺点：<b>还是浪费那 46px</b>。而且第二行给 Tab 加白底 + 蓝选中块之后，颜色比现在重，和整体"轻"的风格有点冲突。
+  </div>
+</div>
+
+
+<!-- ================================================ 方案 C -->
+<div class="sec">
+  <h2>方案 C · 合并成一行，但右侧整组有底色 <span class="tag">省 46px</span></h2>
+  <p class="desc">
+    A 的省空间 + B 的分组感。Tab 放左半（紧跟标题），右侧串口整组套浅灰底胶囊。
+    这样做的好处：<b>Tab 和串口组是两块互不相干的视觉块</b>，中间留白自然，不需要靠"绝对居中"来撑场面。
+  </p>
+
+  <div class="win">
+    <div class="cap"><span>方案 C · 单行 + 右组底色 · 总高 52px</span><span class="dim">1360 × 860</span></div>
+    <div class="topbar">
+      <span class="led"></span>
+      <span class="appname">SFRA Studio</span>
+      <span class="vsep" style="margin:0 2px 0 4px"></span>
+      <span class="seg">
+        <span class="it on">测量</span>
+        <span class="it">补偿器</span>
+      </span>
+      <span class="spacer"></span>
+      <span class="boxgroup">
+        <span class="combo"><span>假 MCU（本机）</span><span class="car">▼</span></span>
+        <span class="btn pri">连接</span>
+        <span class="pill">未连接</span>
+        <span class="pill">仿真 · Fs 100 kHz</span>
+      </span>
+    </div>
+    <div class="body" style="height:330px">
+      <div class="col l">
+        <div class="h">扫频配置</div>
+        <div class="grp">
+          <div class="row"><span>模式</span><span class="miniseg"><span>Loop</span><span class="on">Plant</span></span></div>
+          <div class="row"><span>精度</span><span class="miniseg"><span>快</span><span class="on">标准</span><span>精细</span></span></div>
+          <div class="row"><span>起点</span><span class="v">100 Hz</span></div>
+          <div class="row"><span>终点</span><span class="v">2.00 kHz</span></div>
+        </div>
+      </div>
+      <div class="col m">
+        <div class="plotbox"><div class="plotgrid"></div>
+          <div class="placeholder">幅频 / 相频 Bode 图</div></div>
+      </div>
+      <div class="col r">
+        <div class="h">稳定性判据</div>
+        <div class="grp">
+          <div class="row"><span>相位裕度</span><span class="v">52.4°</span></div>
+          <div class="row"><span>增益裕度</span><span class="v">11.8 dB</span></div>
+          <div class="row"><span>穿越频率</span><span class="v">1.24 kHz</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tip">
+    ⚠ 取舍：Tab 不再"居中"，而是靠左。如果你说的"依旧居中"是硬要求，这个方案要先放弃——
+    但它的<b>观感最稳</b>，因为左 Tab / 右串口两块各占一头，中间的空白是有意义的。
+  </div>
+</div>
+
+
+<!-- ================================================ 窄窗口对比 -->
+<div class="sec">
+  <h2>窄窗口（1120px，窗口最小宽）会怎样</h2>
+  <p class="desc">这一节单独看，是因为<b>合不合并的真正风险就在这里</b>。1120px 时顶栏总需求接近极限。</p>
+
+  <div class="win" style="max-width:1120px">
+    <div class="cap"><span>A · 1120px 挤压情况</span><span class="dim">Tab 被顶离中线 → 需要降级策略</span></div>
+    <div class="topbar" style="padding:0 12px;gap:8px">
+      <span class="led"></span>
+      <span class="appname">SFRA Studio</span>
+      <span class="spacer"></span>
+      <span class="seg">
+        <span class="it on">测量</span>
+        <span class="it">补偿器</span>
+      </span>
+      <span class="spacer"></span>
+      <span class="serial">
+        <span class="combo" style="min-width:104px"><span>假 MCU（本机）</span><span class="car">▼</span></span>
+        <span class="btn pri">连接</span>
+        <span class="pill">未连接</span>
+      </span>
+    </div>
+    <div style="height:120px;background:var(--card);display:flex;align-items:center;
+                justify-content:center;color:var(--t3);font-size:11.5px;font-family:var(--mono)">
+      ↑ 1120px 时「仿真 · Fs 100 kHz」pill 自动隐藏（内容仍在右栏与状态栏里）
+    </div>
+  </div>
+
+  <div class="win" style="max-width:1120px;margin-top:14px">
+    <div class="cap"><span>C · 1120px 挤压情况</span><span class="dim">天然不冲突</span></div>
+    <div class="topbar" style="padding:0 12px;gap:8px">
+      <span class="led"></span>
+      <span class="appname">SFRA Studio</span>
+      <span class="vsep" style="margin:0 2px 0 3px"></span>
+      <span class="seg">
+        <span class="it on">测量</span>
+        <span class="it">补偿器</span>
+      </span>
+      <span class="spacer"></span>
+      <span class="boxgroup" style="gap:7px;padding:4px 8px">
+        <span class="combo" style="min-width:100px"><span>假 MCU（本机）</span><span class="car">▼</span></span>
+        <span class="btn pri">连接</span>
+        <span class="pill">未连接</span>
+      </span>
+    </div>
+    <div style="height:120px;background:var(--card);display:flex;align-items:center;
+                justify-content:center;color:var(--t3);font-size:11.5px;font-family:var(--mono)">
+      ↑ Tab 靠左不受影响；只有右组内部需要取舍
+    </div>
+  </div>
+</div>
+
+
+<!-- ================================================ 对比表 -->
+<div class="sec">
+  <h2>三个方案横向对比</h2>
+  <table>
+    <tr>
+      <th style="width:118px">维度</th>
+      <th>A · 单行居中等分</th>
+      <th>B · 双行加底色</th>
+      <th>C · 单行左对齐 + 右组底色</th>
+    </tr>
+    <tr><td>节省高度</td><td class="y">46px</td><td class="n">0</td><td class="y">46px</td></tr>
+    <tr><td>Tab 是否居中</td><td class="y">是（±6px 浮动）</td><td class="y">是（严格居中）</td><td class="n">否（靠左）</td></tr>
+    <tr><td>1120px 最小宽</td><td class="m">需隐藏 Fs pill</td><td class="y">安全</td><td class="m">右组内部取舍</td></tr>
+    <tr><td>实现改动</td><td class="m">中：改 <span class="hl">_build_tabstrip</span> 合并进 <span class="hl">_build_titlebar</span></td>
+        <td class="y">小：只动 QSS</td>
+        <td class="y">小：合并 + 一个 <span class="hl">boxgroup</span> 容器</td></tr>
+    <tr><td>观感风险</td><td class="m">窄窗口下 Tab 可能偏移，需要自适应</td>
+        <td class="m">颜色偏重，且没解决浪费</td>
+        <td class="y">最低，两块各占一头</td></tr>
+    <tr><td>用户原话诉求</td><td class="y">「放串口这一行 + 依旧居中」✓</td>
+        <td class="y">「两组各一块底色」✓</td>
+        <td class="m">只满足一半</td></tr>
+  </table>
+</div>
+
+
+<!-- ================================================ 实现要点 -->
+<div class="sec">
+  <h2>如果选 A（推荐），实现上有三个坑要提前说</h2>
+  <table>
+    <tr><th style="width:150px">坑</th><th>说明</th></tr>
+    <tr>
+      <td>1. 居中不能靠<br><span class="hl">addStretch</span> 简单对称</td>
+      <td>
+        现在 TabStrip 是「弹簧 + Tab + 弹簧」，严格居中。合并到顶栏后，左边有标题、右边有串口组，
+        两个弹簧的"容量"不同，Tab 会被推离中线。
+        <b>解法</b>：用一个 <span class="hl">QGridLayout</span> 三层结构——左区 / 中间 Tab / 右区，
+        给左右区相同的 <span class="hl">stretch</span>，中间 Tab 用 <span class="hl">Qt.AlignCenter</span>。
+        这样无论左右内容多宽，Tab 都在窗口中线。
+      </td>
+    </tr>
+    <tr>
+      <td>2. 左右区宽度不等时<br>Tab 会被挤歪</td>
+      <td>
+        严格中线意味着：当右区（串口组）比左区（标题）宽很多时，Tab 左边会剩很多空间、
+        右边被压。视觉上察觉不到，但<b>布局会把 Tab 往左推</b>。
+        <b>解法</b>：给中区设 <span class="hl">setMinimumWidth(Tab宽度 + 2×间距)</span>，
+        并把左右区都设成 <span class="hl">QSizePolicy.Expanding</span>，
+        挤不下时优先压缩 pill 的可见性（见坑 3），而不是压缩 Tab。
+      </td>
+    </tr>
+    <tr>
+      <td>3. 窄窗口要降级</td>
+      <td>
+        1120px 时右侧「仿真 · Fs 100 kHz」放不下。
+        <b>解法</b>：给这个 pill 挂一个 <span class="hl">resizeEvent</span> 判据——可用宽 &lt; 阈值时
+        <span class="hl">setVisible(False)</span>；把完整文案挪到 tooltip 和状态栏。
+        这件恰好也是 <span class="hl">test_ui_text_fit.py</span> 会管到的范围，
+        新增的顶栏控件要一并纳入那套判据（否则又会出"文字显示一半"）。
+      </td>
+    </tr>
+  </table>
+  <div class="tip">
+    另外提醒：合并之后顶栏高度从 46 提到 52（给 Tab 的 28px 胶囊留垂直余量），
+    净省 92 − 52 = <b>40px</b>，不是 46px。这个数字也请一并确认。
+  </div>
+</div>
+
+</body>
+</html>

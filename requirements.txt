@@ -1,0 +1,14 @@
+# SFRA Studio 依赖
+#
+# 关于串口：QtSerialPort 随 PyQt5 一起安装（PyQt5.QtSerialPort），
+# 不需要 pyserial。但它**可能缺失**——精简版 PyQt5 wheel 会裁掉，
+# 缺失时程序照样能启动，只是枚举不到任何串口、界面一直停在
+# "假 MCU（本机）"。启动日志里搜 "QtSerialPort" 可确认。
+PyQt5>=5.15
+PyQt5-Qt5>=5.15
+pyqtgraph>=0.13
+numpy>=1.24
+scipy>=1.10
+
+# 测试
+pytest>=7

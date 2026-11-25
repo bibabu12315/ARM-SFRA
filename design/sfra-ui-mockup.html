@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SFRA Studio · UI</title>
+<style>
+:root{
+--bg:#f5f5f7;--card:#fff;--group:#f2f2f5;--inset:#fafafb;
+--t1:#1d1d1f;--t2:#6e6e73;--t3:#a1a1a6;--line:#e6e6eb;--line2:#f1f1f4;
+--blue:#0071e3;--bb:#e9f2fd;--green:#34c759;--amber:#ff9500;--purple:#7d5fe8;
+--mono:"SF Mono","Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;padding:26px 26px 50px}
+.win{max-width:1260px;margin:0 auto;background:var(--card);border-radius:22px;overflow:hidden;border:.5px solid rgba(0,0,0,.07);box-shadow:0 1px 3px rgba(0,0,0,.04),0 22px 56px -30px rgba(0,0,0,.3)}
+.tb{height:44px;display:flex;align-items:center;gap:12px;padding:0 16px;background:#fbfbfd;border-bottom:.5px solid var(--line2)}
+.lights{display:flex;gap:7px}.lights i{width:11px;height:11px;border-radius:50%;display:block}
+.lights i:nth-child(1){background:#ff5f57}.lights i:nth-child(2){background:#febc2e}.lights i:nth-child(3){background:#28c840}
+.led{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(52,199,89,.15)}
+.appname{font-size:13px;font-weight:500}.sp{flex:1}
+.pillinfo{display:flex;align-items:center;gap:7px;height:25px;padding:0 11px;border-radius:980px;background:var(--group);font-size:11px;color:var(--t2);font-family:var(--mono)}
+.pillinfo b{color:var(--t1);font-weight:500}
+.tabs{display:flex;justify-content:center;padding:9px 0 11px;background:#fbfbfd;border-bottom:.5px solid var(--line2)}
+.seg{display:flex;background:var(--group);border-radius:9px;padding:2px}
+.seg button{border:0;background:none;font:inherit;font-size:12.5px;font-weight:500;color:var(--t2);padding:5px 24px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.seg button.on{background:#fff;color:var(--t1);box-shadow:0 1px 2px rgba(0,0,0,.09),0 0 0 .5px rgba(0,0,0,.04)}
+.seg .dot{width:5px;height:5px;border-radius:50%;background:var(--blue)}
+.body{display:grid;grid-template-columns:290px minmax(0,1fr) 262px;min-height:640px}
+.col{padding:16px 14px 18px;overflow:hidden}
+.col.l{border-right:.5px solid var(--line2);background:#fcfcfd}
+.col.r{border-left:.5px solid var(--line2);background:#fcfcfd}
+.col.m{padding:14px 16px 18px;position:relative}
+.h{font-size:10.5px;font-weight:500;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin:18px 0 7px 2px}
+.h:first-child{margin-top:0}
+.grp{background:#fff;border:.5px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;min-height:36px;border-bottom:.5px solid var(--line2)}
+.row:last-child{border-bottom:0}
+.row .k{font-size:12.5px}
+.row .v{font-size:12px;color:var(--t2);font-family:var(--mono)}
+.row.sub{min-height:32px;padding-top:5px;padding-bottom:5px}
+.row.sub .k{font-size:11.5px;color:var(--t2)}
+.inp{font-family:var(--mono);font-size:12.5px;color:var(--t1);text-align:right;border:0;background:none;outline:none;width:70px;padding:3px 5px;border-radius:6px}
+.inp:focus{background:var(--bb)}
+.u{font-size:10.5px;color:var(--t3);margin-left:2px}
+.ps{display:flex;background:var(--group);border-radius:7px;padding:2px}
+.ps span{font-size:11px;padding:2px 9px;border-radius:5px;color:var(--t2);cursor:pointer;white-space:nowrap}
+.ps span.on{background:#fff;color:var(--t1);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:35px;padding:0 15px;border:0;border-radius:10px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:filter .15s,transform .08s;white-space:nowrap}
+.btn:active{transform:scale(.985)}
+.bpri{background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(0,113,227,.28)}
+.bpri:hover{filter:brightness(1.05)}
+.bgho{background:var(--group);color:var(--t1)}
+.bgho:hover{background:#eaeaef}
+.bsm{height:26px;padding:0 11px;font-size:11.5px;border-radius:8px}
+.bblk{width:100%}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.brow{display:flex;gap:7px;margin-top:8px}
+.ac{margin-top:14px;padding-top:14px;border-top:.5px solid var(--line)}
+.est{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--t2);margin-bottom:9px}
+.est b{font-size:15px;font-weight:500;color:var(--t1);font-family:var(--mono);letter-spacing:-.3px}
+.pg{margin-top:13px}
+.pg .top{display:flex;justify-content:space-between;font-size:11.5px;color:var(--t2);margin-bottom:5px}
+.pg .top b{color:var(--t1);font-weight:500;font-family:var(--mono)}
+.bar{height:5px;border-radius:980px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:980px;background:var(--blue);width:0%;transition:width .4s cubic-bezier(.32,.72,0,1)}
+.pg .bot{display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;color:var(--t3);font-family:var(--mono)}
+.cc{background:#fff;border:.5px solid var(--line);border-radius:12px;overflow:hidden}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:9px 13px 3px}
+.ch .t{font-size:12px;font-weight:500}
+.ch .t small{color:var(--t3);font-weight:400;font-size:11px;margin-left:3px}
+.lg{display:flex;gap:11px;font-size:10.5px;color:var(--t2);align-items:center}
+.lg span{display:flex;align-items:center;gap:4px}
+.lg i{width:13px;height:2.5px;border-radius:2px;display:block}
+.cb{position:relative}
+svg{display:block;width:100%;height:auto}
+.tip{position:absolute;background:rgba(29,29,31,.9);color:#fff;border-radius:7px;padding:5px 8px;font-size:10px;line-height:1.45;font-family:var(--mono);pointer-events:none;white-space:nowrap;transform:translate(-50%,-118%);opacity:0;transition:opacity .12s;z-index:3}
+.tip.on{opacity:1}
+.mc{background:#fff;border:.5px solid var(--line);border-radius:12px;padding:11px 12px}
+.mt{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:.5px solid var(--line2)}
+.mt:last-child{border-bottom:0;padding-bottom:0}
+.mt:first-child{padding-top:0}
+.mt .k{font-size:12px;color:var(--t2)}
+.mt .v{font-size:15px;font-weight:500;font-family:var(--mono);letter-spacing:-.3px}
+.mt .v small{font-size:10px;font-weight:400;color:var(--t3)}
+.mt .v.sm{font-size:12.5px}
+.ok{color:#248a3d}.wn{color:#b36b00}.na{color:var(--t3)}
+.chip{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 7px;border-radius:980px}
+.chip.ok{background:rgba(52,199,89,.13);color:#248a3d}
+.chip.wn{background:rgba(255,149,0,.14);color:#b36b00}
+.chip.mu{background:var(--group);color:var(--t2)}
+.note{display:flex;gap:7px;padding:8px 10px;border-radius:9px;font-size:11px;line-height:1.45;color:var(--t2);background:var(--inset)}
+.note+.note{margin-top:5px}
+.note.wn{background:rgba(255,149,0,.09);color:#8a5300}
+.note i{flex:0 0 auto;width:5px;height:5px;border-radius:50%;background:var(--t3);margin-top:5px}
+.note.wn i{background:var(--amber)}
+.t2body{display:grid;grid-template-columns:320px minmax(0,1fr);min-height:640px}
+.cg{display:grid;grid-template-columns:1fr 1fr}
+.cell{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:7px 11px;border-bottom:.5px solid var(--line2);border-right:.5px solid var(--line2)}
+.cell:nth-child(2n){border-right:0}
+.cell .n{font-size:11px;color:var(--t3);font-family:var(--mono)}
+.cell .inp{width:88px;font-size:12px}
+.kv{display:flex;justify-content:space-between;padding:7px 11px;border-bottom:.5px solid var(--line2);font-size:12px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--t2)}
+.kv .v{font-family:var(--mono);font-weight:500}
+.sw{width:36px;height:21px;border-radius:980px;background:#e5e5ea;position:relative;flex:0 0 auto;transition:background .18s;cursor:pointer}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .18s}
+.sw.on{background:var(--green)}.sw.on::after{left:17px}
+.cmp{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--inset);border-radius:9px;font-size:11.5px;color:var(--t2);line-height:1.45}
+.cmp b{color:var(--t1);font-weight:500}
+.menu{position:absolute;right:16px;top:42px;background:#fff;border-radius:12px;width:176px;padding:5px;border:.5px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.07),0 18px 44px -16px rgba(0,0,0,.18);display:none;z-index:6}
+.menu.on{display:block}
+.menu a{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;font-size:12px;color:var(--t1);cursor:pointer;text-decoration:none}
+.menu a:hover{background:var(--bb);color:var(--blue)}
+.menu a .d{width:26px;height:16px;border-radius:4px;background:var(--group);font-size:8.5px;display:flex;align-items:center;justify-content:center;color:var(--t2);font-family:var(--mono)}
+.panel{display:none}.panel.on{display:block}
+.foot{max-width:1260px;margin:16px auto 0;text-align:center;font-size:11px;color:var(--t3);line-height:1.8}
+.caption{max-width:1260px;margin:0 auto 12px;display:flex;align-items:baseline;gap:10px}
+.caption h1{font-size:15px;font-weight:500}
+.caption span{font-size:12px;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<div class="caption"><h1>SFRA Studio · 界面设计稿</h1><span>Tab1 测量 / Tab2 补偿器 · 全部交互可点</span></div>
+.mr{display:flex;flex-direction:column;justify-content:center;padding:2px 12px;border-left:.5px solid var(--line2)}
+.mr .small{font-size:10px;color:var(--t3);margin-bottom:1px}
+.mr .big{font-size:20px;font-weight:500;font-family:var(--mono);letter-spacing:-.5px}
+</style>
+</head>
+<body>
+
+<div class="caption"><h1>SFRA Studio · 界面设计稿</h1><span>Tab1 测量 / Tab2 补偿器 · 全部交互可点</span></div>
+
+<div class="win">
+  <div class="tb">
+    <div class="lights"><i></i><i></i><i></i></div>
+    <div style="display:flex;align-items:center;gap:6px"><span class="led"></span><span class="appname">SFRA Studio</span></div>
+    <div class="sp"></div>
+    <div class="pillinfo"><span>COM3 · 921600</span><span style="color:var(--line)">·</span><span>ST-Link VCP</span></div>
+    <div class="pillinfo"><span>固件 v1.0</span><span style="color:var(--line)">·</span><span>Fs <b>100 kHz</b></span></div>
+  </div>
+
+  <div class="tabs">
+    <div class="seg">
+      <button class="on" data-tab="0">测量<span class="dot"></span></button>
+      <button data-tab="1">补偿器</button>
+    </div>
+  </div>
+
+  <div class="panel on" id="p0">
+  <div class="body">
+    <div class="col l">
+      <div class="h">扫频配置</div>
+      <div class="grp">
+        <div class="row"><span class="k">模式</span>
+          <div class="ps" id="modeSeg"><span class="on" data-m="loop">Loop Gain</span><span data-m="plant">Plant</span></div>
+        </div>
+        <div class="row"><span class="k">起点</span><div><input class="inp" id="f0" value="100"><span class="u">Hz</span></div></div>
+        <div class="row"><span class="k">终点</span><div><input class="inp" id="f1" value="20000"><span class="u">Hz</span></div></div>
+        <div class="row"><span class="k">点数 / decade</span><div><input class="inp" id="ppd" value="20" style="width:46px"></div></div>
+        <div class="row"><span class="k">精度</span>
+          <div class="ps" id="precSeg"><span data-p="0">Fast</span><span class="on" data-p="1">N</span><span data-p="2">P</span></div>
+        </div>
+        <div class="row"><span class="k">注入幅值</span>
+          <div><input class="inp" id="amp" value="1.0" style="width:50px"><span class="u">% pu</span></div>
+        </div>
+        <div class="row sub"><span class="k">上限反推</span><button class="btn bgho bsm" id="preBtn">预扫</button></div>
+      </div>
+
+      <div class="h">工作点</div>
+      <div class="grp">
+        <div class="row"><span class="k">拓扑</span><span class="v">Buck</span></div>
+        <div class="row"><span class="k">Vin / Vout</span><span class="v">24 / 12 V</span></div>
+        <div class="row"><span class="k">Iout</span><span class="v">5.00 A</span></div>
+        <div class="row"><span class="k">被测环路</span><span class="v">电流内环</span></div>
+      </div>
+
+      <div class="ac">
+        <div class="est"><span>预计 <b id="npts">68</b> 点</span><span>约 <b id="ets">46</b> s</span></div>
+        <button class="btn bpri bblk" id="runBtn">开始扫频</button>
+        <div class="brow">
+          <button class="btn bgho" style="flex:1" id="stopBtn" disabled>停止</button>
+          <button class="btn bgho" style="flex:0 0 64px" id="expBtn">导出</button>
+        </div>
+        <div class="pg">
+          <div class="top"><span id="pstate">Loop Gain · 就绪</span><b id="ppct">0%</b></div>
+          <div class="bar"><i id="pbar"></i></div>
+          <div class="bot"><span id="pfact">f_act —</span><span id="psamp">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col m">
+      <div class="cc" style="margin-bottom:11px">
+        <div class="ch"><span class="t">增益<small>dB</small></span>
+          <div class="lg">
+            <span style="color:var(--blue)"><i style="background:currentColor"></i>Loop Gain</span>
+            <span style="color:var(--purple)"><i style="background:currentColor"></i>Plant×G 预测</span>
+          </div>
+        </div>
+        <div class="cb" id="mw"><svg id="msvg"></svg><div class="tip" id="tm"></div></div>
+      </div>
+
+      <div class="cc">
+        <div class="ch"><span class="t">相位<small>deg</small></span>
+          <div class="lg"><span style="color:#c8c8cf"><i style="background:currentColor"></i>−180° 参考</span></div>
+        </div>
+        <div class="cb" id="pw"><svg id="psvg"></svg><div class="tip" id="tp"></div></div>
+      </div>
+
+      <div class="menu" id="menu">
+        <a><span class="d">CSV</span>数据 · TI 列名</a>
+        <a><span class="d">PNG</span>图表快照</a>
+        <a><span class="d">JSON</span>完整会话</a>
+        <a><span class="d">MD</span>测试报告</a>
+      </div>
+    </div>
+
+    <div class="col r">
+      <div class="h">稳定性判据</div>
+      <div class="mc">
+        <div class="mt"><span class="k">相位裕度 PM</span><span class="v ok" id="vPM">—</span></div>
+        <div class="mt"><span class="k">增益裕度 GM</span><span class="v ok" id="vGM">11.3<small>dB</small></span></div>
+        <div class="mt"><span class="k">穿越频率 fc</span><span class="v" id="vFC">—</span></div>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:7px;flex-wrap:wrap">
+        <span class="chip mu" id="cPM">等待数据</span>
+        <span class="chip mu" id="cGM">等待数据</span>
+      </div>
+
+      <div class="h">曲线信息</div>
+      <div class="mc">
+        <div class="mt"><span class="k">频点</span><span class="v sm" id="vN">0 / 68</span></div>
+        <div class="mt"><span class="k">注入幅值</span><span class="v sm">1.0 %pu</span></div>
+        <div class="mt"><span class="k">每周期采样</span><span class="v sm ok" id="vS">≥ 5 点</span></div>
+        <div class="mt"><span class="k">估噪底</span><span class="v sm">−64 dB</span></div>
+      </div>
+
+      <div class="h">告警</div>
+      <div id="notes"><div class="note"><i></i><span>尚未扫频，无告警</span></div></div>
+
+      <div class="h">会话</div>
+      <div class="grp">
+        <div class="row"><span class="k" style="font-size:11.5px">11-23 16:42</span><span class="v" style="font-size:11px" id="vSave">未保存</span></div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="panel" id="p1">
+  <div class="t2body">
+    <div class="col l" style="border-right:.5px solid var(--line2)">
+      <div class="h">补偿器类型</div>
+      <div class="grp">
+        <div class="row">
+          <div class="ps" style="flex:1;display:flex">
+            <span style="flex:1;text-align:center;padding:4px 0">2P2Z · PID</span>
+            <span class="on" style="flex:1;text-align:center;padding:4px 0">3P3Z</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="h">系数</div>
+      <div class="grp">
+        <div class="cg">
+          <div class="cell"><span class="n">b0</span><input class="inp" value="0.4213"></div>
+          <div class="cell"><span class="n">b1</span><input class="inp" value="-0.7128"></div>
+          <div class="cell"><span class="n">b2</span><input class="inp" value="0.3105"></div>
+          <div class="cell"><span class="n">b3</span><input class="inp" value="0.0000"></div>
+          <div class="cell" style="grid-column:1/-1;border-right:0">
+            <span class="n">a1 / a2</span>
+            <div style="display:flex;gap:4px"><input class="inp" value="-1.6043" style="width:72px"><input class="inp" value="0.6387" style="width:72px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="h">等效参数</div>
+      <div class="grp">
+        <div class="kv"><span class="k">KP</span><span class="v">0.4213</span></div>
+        <div class="kv"><span class="k">KI</span><span class="v">82.6</span></div>
+        <div class="kv"><span class="k">Kd</span><span class="v">0.0000</span></div>
+        <div class="kv"><span class="k">Fs</span><span class="v">100 kHz</span></div>
+      </div>
+
+      <div class="ac">
+        <button class="btn bpri bblk">下发系数到 MCU</button>
+        <div class="brow"><button class="btn bgho bblk">从 MCU 读回</button></div>
+      </div>
+
+      <div class="h">预测</div>
+      <div class="cmp"><div class="sw on" id="predSw"></div><span>实时预览 <b>实测 Plant × 当前 G</b>，无需重扫</span></div>
+    </div>
+
+    <div class="col m">
+      <div class="cc" style="margin-bottom:11px">
+        <div class="ch"><span class="t">补偿器响应<small>|G| dB</small></span>
+          <div class="lg"><span style="color:var(--amber)"><i style="background:currentColor"></i>G(z)</span></div>
+        </div>
+        <div class="cb"><svg id="gsvg"></svg></div>
+      </div>
+
+      <div class="cc">
+        <div class="ch"><span class="t">预测环路增益<small>Plant × G</small></span>
+          <div class="lg">
+            <span style="color:var(--blue)"><i style="background:currentColor"></i>实测 GH</span>
+            <span style="color:var(--purple)"><i style="background:currentColor"></i>预测</span>
+          </div>
+        </div>
+        <div class="cb"><svg id="gsvg2"></svg></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:11px">
+        <div class="mc" style="flex:1;padding:9px 11px">
+          <div style="font-size:10.5px;color:var(--t3);margin-bottom:2px">预测 PM</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono);color:#248a3d">58.4<span style="font-size:10px;color:var(--t3)">°</span></div>
+        </div>
+        <div class="mc" style="flex:1;padding:9px 11px">
+          <div style="font-size:10.5px;color:var(--t3);margin-bottom:2px">预测 fc</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono)">4.08<span style="font-size:10px;color:var(--t3)">kHz</span></div>
+        </div>
+        <div class="mc" style="flex:1;padding:9px 11px">
+          <div style="font-size:10.5px;color:var(--t3);margin-bottom:2px">与实测差</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono);color:#b36b00">6.3<span style="font-size:10px;color:var(--t3)">°</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<div class="foot">可点：Tab 切换 · Loop Gain / Plant · 开始扫频（模拟）· 预扫 · 导出菜单 · 曲线悬停</div>
+<script>
+var NS='http://www.w3.org/2000/svg';
+var W=700,ML=48,MR=14,MT=12,F0=100,FS1=20000;
+var C='#0071e3',CP='#7d5fe8',CG='#ff9500';
+function E(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+function lx(f){return ML+(Math.log10(f)-2)/(Math.log10(FS1)-2)*(W-ML-MR);}
+function TT(s,x,y,o){var t=E('text',{x:x,y:y,'font-size':10,fill:'#a1a1a6'});for(var k in o)t.setAttribute(k,o[k]);t.style.fontFamily="'SF Mono',Consolas,monospace";t.textContent=s;return t;}
+function plant(n){
+  var a=[],i,f,x,hm,hp,Q=2.0;
+  for(i=0;i<n;i++){
+    f=F0*Math.pow(200,i/(n-1));x=f/1300;
+    hm=1/Math.sqrt((1-x*x)*(1-x*x)+(x/Q)*(x/Q));
+    hp=-Math.atan2(x/Q,1-x*x)*180/Math.PI;
+    a.push({f:f,mag:20*Math.log10(hm),ph:hp});
+  }
+  return a;
+}
+function gz(p,kp,fc){
+  var x=p.f/fc;
+  var m=kp*Math.sqrt(1+Math.pow(x*2.4,2))/Math.sqrt(1+x*x);
+  return {m:20*Math.log10(m),p:Math.atan(x*2.4)*180/Math.PI-90};
+}
+function withG(a,kp,fc){
+  return a.map(function(p){
+    var g=gz(p,kp,fc),ph=p.ph+g.p;
+    while(ph<-360)ph+=360;
+    return {f:p.f,mag:p.mag+g.m,ph:ph};
+  });
+}
+function onlyG(a,kp,fc){
+  return a.map(function(p){var g=gz(p,kp,fc);return {f:p.f,mag:g.m,ph:g.p};});
+}
+function findCross(d){
+  var i,a,b,t;
+  for(i=1;i<d.length;i++){
+    a=d[i-1];b=d[i];
+    if(a.mag>=0&&b.mag<0){t=a.mag/(a.mag-b.mag);return {f:a.f*Math.pow(b.f/a.f,t),ph:a.ph+(b.ph-a.ph)*t};}
+  }
+  return null;
+}
+function draw(svg,data,o){
+  var H=o.h,y0=o.ymin,y1=o.ymax;
+  function Y(v){return MT+(y1-v)/(y1-y0)*(H-MT-28);}
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('preserveAspectRatio','none');
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  svg.appendChild(E('rect',{x:0,y:0,width:W,height:H,fill:'#fff'}));
+  var d,m,f;
+  for(d=-1;d<=5;d++){
+    for(m=2;m<10;m++){
+      f=Math.pow(10,d)*m;
+      if(f>F0&&f<FS1)svg.appendChild(E('line',{x1:lx(f),y1:MT,x2:lx(f),y2:H-28,stroke:'#f8f8fa','stroke-width':1}));
+    }
+    f=Math.pow(10,d);
+    if(f>F0*0.99&&f<FS1*1.01){
+      svg.appendChild(E('line',{x1:lx(f),y1:MT,x2:lx(f),y2:H-28,stroke:'#ededf1','stroke-width':1}));
+      svg.appendChild(TT(f>=1000?(f/1000)+'k':String(f),lx(f),H-9,{'text-anchor':'middle'}));
+    }
+  }
+  var st=(y1-y0)/4,k,v;
+  for(k=0;k<=4;k++){
+    v=y0+st*k;
+    svg.appendChild(E('line',{x1:ML,y1:Y(v),x2:W-MR,y2:Y(v),stroke:'#ededf1','stroke-width':1}));
+    svg.appendChild(TT(String(Math.round(v)),ML-9,Y(v)+3.5,{'text-anchor':'end'}));
+  }
+  if(o.zero!==undefined)svg.appendChild(E('line',{x1:ML,y1:Y(o.zero),x2:W-MR,y2:Y(o.zero),stroke:'#c8c8cf','stroke-width':1,'stroke-dasharray':'4 4'}));
+  if(o.hline!==undefined)svg.appendChild(E('line',{x1:ML,y1:Y(o.hline),x2:W-MR,y2:Y(o.hline),stroke:'#e8b96f','stroke-width':1,'stroke-dasharray':'5 4'}));
+  function pth(dt){
+    var p='',i;
+    for(i=0;i<dt.length;i++)p+=(i?'L':'M')+lx(dt[i].f).toFixed(1)+' '+Y(dt[i][o.key]).toFixed(1);
+    return p;
+  }
+  if(o.pred)svg.appendChild(E('path',{d:pth(o.pred),fill:'none',stroke:CP,'stroke-width':1.5,'stroke-dasharray':'5 3',opacity:.85}));
+  var line=pth(data),last=lx(data[data.length-1].f),first=lx(data[0].f);
+  svg.appendChild(E('path',{d:line+'L'+last+' '+(H-28)+'L'+first+' '+(H-28)+'Z',fill:C,opacity:'0.06'}));
+  svg.appendChild(E('path',{d:line,fill:'none',stroke:C,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+  if(o.cross){
+    svg.appendChild(E('line',{x1:lx(o.cross.f),y1:MT,x2:lx(o.cross.f),y2:H-28,stroke:C,'stroke-width':1,'stroke-dasharray':'2 3',opacity:.5}));
+    svg.appendChild(E('circle',{cx:lx(o.cross.f),cy:Y(o.key==='mag'?0:o.cross.ph),r:3.5,fill:'#fff',stroke:C,'stroke-width':2}));
+  }
+  svg._m={Y:Y,data:data,key:o.key,h:H};
+}
+function hook(svg,wrap,tip,unit){
+  wrap.onmousemove=function(ev){
+    var m=svg._m;if(!m)return;
+    var r=svg.getBoundingClientRect();
+    var x=(ev.clientX-r.left)/r.width*W;
+    var frac=(x-ML)/(W-ML-MR);
+    if(frac<0||frac>1){tip.classList.remove('on');return;}
+    var f=Math.pow(10,2+frac*(Math.log10(FS1)-2));
+    var best=m.data[0],i,dmin=1e9;
+    for(i=0;i<m.data.length;i++){var dd=Math.abs(Math.log10(m.data[i].f/f));if(dd<dmin){dmin=dd;best=m.data[i];}}
+    tip.style.left=((lx(best.f)/W)*r.width)+'px';
+    tip.style.top=((m.Y(best[m.key])/m.h)*r.height)+'px';
+    tip.innerHTML='<b>'+best.f.toFixed(best.f<1000?1:0)+' Hz</b><br>'+best[m.key].toFixed(1)+' '+unit;
+    tip.classList.add('on');
+  };
+  wrap.onmouseleave=function(){tip.classList.remove('on');};
+}
+var FC=3400,KP=1.6,N=68;
+var base=plant(N);
+var ghData=withG(base,KP,FC);
+var cross=findCross(ghData);
+var msvg=document.getElementById('msvg'),psvg=document.getElementById('psvg');
+function render(n){
+  draw(msvg,ghData.slice(0,n),{h:236,ymin:-60,ymax:60,zero:0,key:'mag',pred:n>=N?ghData:null,cross:n>10?cross:null});
+  draw(psvg,ghData.slice(0,n),{h:180,ymin:-360,ymax:0,hline:-180,key:'ph',cross:n>10?cross:null});
+}
+render(N);
+hook(msvg,document.getElementById('mw'),document.getElementById('tm'),'dB');
+hook(psvg,document.getElementById('pw'),document.getElementById('tp'),'deg');
+draw(document.getElementById('gsvg'),onlyG(base,KP,FC),{h:196,ymin:-20,ymax:40,key:'mag'});
+draw(document.getElementById('gsvg2'),ghData,{h:196,ymin:-60,ymax:60,zero:0,key:'mag',pred:withG(base,KP*1.35,FC*1.2)});
+function setPM(c){
+  var pm=c?180+c.ph:null;
+  document.getElementById('vPM').innerHTML=pm===null?'—':pm.toFixed(1)+'<small>°</small>';
+  document.getElementById('vFC').innerHTML=c?(c.f/1000).toFixed(2)+'<small>kHz</small>':'—';
+  var a=document.getElementById('cPM'),b=document.getElementById('cGM');
+  if(pm!==null&&pm>45){a.className='chip ok';a.textContent='PM 可信';}
+  else{a.className='chip mu';a.textContent='PM 偏低';}
+  b.className='chip mu';b.textContent='GM 无 −180° 穿越';
+}
+setPM(cross);
+var tabs=document.querySelectorAll('.seg button[data-tab]');
+var panels=[document.getElementById('p0'),document.getElementById('p1')];
+for(var i=0;i<tabs.length;i++){
+  tabs[i].onclick=(function(b){return function(){
+    for(var j=0;j<tabs.length;j++)tabs[j].classList.remove('on');
+    b.classList.add('on');
+    var k=+b.getAttribute('data-tab');
+    for(var q=0;q<panels.length;q++)panels[q].classList.toggle('on',k===q);
+  };})(tabs[i]);
+}
+var mg=document.getElementById('modeSeg');
+mg.onclick=function(e){
+  if(e.target.tagName!=='SPAN')return;
+  var ss=mg.getElementsByTagName('span');
+  for(var j=0;j<ss.length;j++)ss[j].classList.remove('on');
+  e.target.classList.add('on');
+  var loop=e.target.getAttribute('data-m')==='loop';
+  ghData=loop?withG(base,KP,FC):base;
+  cross=findCross(ghData);
+  render(N);setPM(cross);
+  document.getElementById('pstate').textContent=(loop?'Loop Gain':'Plant')+' · 就绪';
+  document.getElementById('ets').textContent=loop?'46':'23';
+};
+var pg=document.getElementById('precSeg');
+pg.onclick=function(e){
+  if(e.target.tagName!=='SPAN')return;
+  var ss=pg.getElementsByTagName('span');
+  for(var j=0;j<ss.length;j++)ss[j].classList.remove('on');
+  e.target.classList.add('on');
+};
+document.getElementById('predSw').onclick=function(){this.classList.toggle('on');};
+var menu=document.getElementById('menu');
+document.getElementById('expBtn').onclick=function(e){e.stopPropagation();menu.classList.toggle('on');};
+document.onclick=function(){menu.classList.remove('on');};
+var running=false,timer=null,prog=0;
+var runBtn=document.getElementById('runBtn'),stopBtn=document.getElementById('stopBtn');
+var pbar=document.getElementById('pbar'),ppct=document.getElementById('ppct');
+var pfact=document.getElementById('pfact'),psamp=document.getElementById('psamp');
+function setProg(p){
+  prog=p;pbar.style.width=p+'%';ppct.textContent=Math.round(p)+'%';
+  var idx=Math.min(N,Math.round(p/100*N));
+  var f=F0*Math.pow(200,Math.max(0,idx-1)/(N-1));
+  pfact.textContent='f_act '+(f<1000?f.toFixed(1):(f/1000).toFixed(2)+' k')+'Hz';
+  psamp.textContent=(100000/f).toFixed(0)+' 样本/周期';
+  document.getElementById('vN').textContent=idx+' / '+N;
+  render(idx);
+}
+runBtn.onclick=function(){
+  if(running)return;
+  running=true;runBtn.disabled=true;stopBtn.disabled=false;
+  menu.classList.remove('on');
+  document.getElementById('pstate').textContent='Loop Gain · 扫描中';
+  setProg(0);
+  timer=setInterval(function(){
+    setProg(Math.min(100,prog+2.2));
+    if(prog>=100){
+      clearInterval(timer);running=false;
+      runBtn.disabled=false;stopBtn.disabled=true;
+      document.getElementById('pstate').textContent='Loop Gain · 完成';
+      document.getElementById('vSave').textContent='已保存';
+      document.getElementById('notes').innerHTML='<div class="note wn"><i></i><span>2 个频点每周期采样 &lt; 4，已标灰剔除</span></div><div class="note"><i></i><span>未检出 −180° 穿越，GM 不可信</span></div>';
+    }
+  },85);
+};
+stopBtn.onclick=function(){
+  clearInterval(timer);running=false;
+  runBtn.disabled=false;stopBtn.disabled=true;
+  document.getElementById('pstate').textContent='Loop Gain · 已中止';
+};
+document.getElementById('preBtn').onclick=function(){
+  var b=this;b.textContent='扫描中…';b.disabled=true;
+  setTimeout(function(){
+    b.textContent='峰值 +8.4 dB';
+    document.getElementById('amp').value='0.6';
+    document.getElementById('notes').innerHTML='<div class="note"><i></i><span>预扫完成：谐振峰 +8.4 dB，幅值自动降至 0.6 %pu</span></div>';
+    setTimeout(function(){b.textContent='预扫';b.disabled=false;},1800);
+  },1800);
+};
+</script>
+</body>
+</html>
